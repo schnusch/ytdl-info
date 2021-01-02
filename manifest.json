@@ -1,0 +1,20 @@
+{
+	"manifest_version": 2,
+	"name":        "youtube-dl info",
+	"version":     "0.1",
+	"description": "Extract video info with youtube-dl.",
+
+	"permissions": [
+		"tabs",
+		"<all_urls>"
+	],
+
+	"browser_action": {
+		"default_icon":  "youtube-dl.svg",
+		"default_title": "youtube-dl info"
+	},
+
+	"background": {
+		"scripts": ["background.js"]
+	}
+}
