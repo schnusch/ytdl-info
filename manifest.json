@@ -4,6 +4,10 @@
 	"version":     "0.1",
 	"description": "Extract video info with youtube-dl.",
 
+	"icons": {
+		"48": "youtube-dl.svg"
+	},
+
 	"permissions": [
 		"storage",
 		"tabs",
