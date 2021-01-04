@@ -106,7 +106,7 @@ function format_filesize(size) {
 	return `${size.substr(0, n - 1)}.${size.substr(n - 1)} MiB`;
 }
 
-function dump_format_info(data) {
+function dump_format_info(data, title, uploader) {
 	const root = new_tag("li");
 
 	if(data.format) {
@@ -114,7 +114,18 @@ function dump_format_info(data) {
 	}
 
 	root.add_tag("a", {href: data.url}).add_text("video");
-	// TODO another link
+	root.add_text("/");
+
+	let embedded_url = "embed.xhtml?";
+	if(title) {
+		embedded_url += "t=" + quote_plus(title);
+		if(uploader) {
+			embedded_url += quote_plus(" \u2014 " + uploader);
+		}
+		embedded_url += "&";
+	}
+	embedded_url += "v=" + quote_plus(data.url);
+	root.add_tag("a", {href: embedded_url}).add_text("embedded");
 
 	if(data.filesize) {
 		root.add_text(" " + format_filesize(data.filesize));
@@ -144,7 +155,7 @@ function dump_video_info(data, body) {
 
 	const ul = body.add_tag("ul", {"class": "formats"});
 	(data.formats || [data])
-		.map(dump_format_info)
+		.map(fmt => dump_format_info(fmt, data.title, data.uploader))
 		.forEach(e => ul.appendChild(e));
 }
 
