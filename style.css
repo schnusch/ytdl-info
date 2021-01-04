@@ -1,0 +1,24 @@
+body { font-family: sans-serif; }
+body         > *        { display: none;  }
+body.info    > #info    { display: block; }
+body.error   > #error   { display: block; }
+body.loading > #loading { display: block; }
+
+:link:not(:hover) { text-decoration: none; }
+
+#m3u { width: 100%; }
+
+#loading::after {
+	content: "...";
+	animation-name: loading;
+	animation-duration: 1s;
+	animation-timing-function: linear;
+	animation-iteration-count: infinite;
+}
+
+@keyframes loading {
+	0%  { content: "";    }
+	25% { content: ".";   }
+	50% { content: "..";  }
+	75% { content: "..."; }
+}
