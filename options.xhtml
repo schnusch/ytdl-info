@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>options</title>
+		<link rel="icon" href="youtube-dl.svg"/>
+		<script src="options.js" defer="yes"/>
+		<style>
+			#options {
+				margin: 0 auto;
+				max-width: 40em;
+				display: grid;
+				grid-template-columns: auto 1fr;
+				grid-gap: 0.5em;
+			}
+			label { display: table; }
+			label > div {
+				width: 100%;
+				height: 100%;
+				display: table-cell;
+				vertical-align: middle;
+			}
+			button { text-align: center; }
+		</style>
+	</head>
+	<body>
+		<form id="options">
+			<label for="endpoint"><div>youtube-dl Endpoint:</div></label><input id="endpoint" type="url" placeholder="http://127.0.0.1:8000/"/>
+			<label for="auth"><div>Authorization:</div></label><input id="auth" type="text"/>
+			<button type="submit">Save</button>
+		</form>
+	</body>
+</html>

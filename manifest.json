@@ -5,9 +5,14 @@
 	"description": "Extract video info with youtube-dl.",
 
 	"permissions": [
+		"storage",
 		"tabs",
 		"<all_urls>"
 	],
+
+	"options_ui": {
+		"page": "options.xhtml"
+	},
 
 	"browser_action": {
 		"default_icon":  "youtube-dl.svg",

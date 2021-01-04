@@ -37,19 +37,24 @@ function show_error(e) {
 }
 
 function fetch_youtubedl_info(url) {
-	const req_url  = "http://127.0.0.1:8000/?u=" + quote_plus(url);
-	const req_info = {
-		credentials:    "omit",
-		referrerPolicy: "no-referrer",
-		headers: {
-			"Authorization": "Basic YWJjOmRlZgo=",
-		},
-	};
+	browser.storage.sync.get()
+		.then(({auth, endpoint}) => {
+			const req_url  = (endpoint || "http://127.0.0.1:8000/") + "?u=" + quote_plus(url);
+			const headers  = {};
+			const req_info = {
+				credentials:    "omit",
+				referrerPolicy: "no-referrer",
+				headers:        headers,
+			};
+			if(auth) {
+				headers["Authorization"] = auth;
+			}
 
-	document.querySelector("#loading").add_tag("a", {"href": req_url}).add_text(req_url);
-	document.body.setAttribute("class", "loading");
+			document.querySelector("#loading").add_tag("a", {"href": req_url}).add_text(req_url);
+			document.body.setAttribute("class", "loading");
 
-	fetch(req_url, req_info)
+			return fetch(req_url, req_info);
+		})
 		.then(resp => resp.ok
 			? resp.json()
 			: resp.text().then(txt => {
