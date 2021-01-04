@@ -38,7 +38,7 @@ function show_error(e) {
 
 function fetch_youtubedl_info(url) {
 	browser.storage.sync.get()
-		.then(({auth, endpoint}) => {
+		.then(({add_intent, auth, endpoint}) => {
 			const req_url  = (endpoint || "http://127.0.0.1:8000/") + "?u=" + quote_plus(url);
 			const headers  = {};
 			const req_info = {
@@ -53,24 +53,24 @@ function fetch_youtubedl_info(url) {
 			document.querySelector("#loading").add_tag("a", {"href": req_url}).add_text(req_url);
 			document.body.setAttribute("class", "loading");
 
-			return fetch(req_url, req_info);
-		})
-		.then(resp => resp.ok
-			? resp.json()
-			: resp.text().then(txt => {
-				const e = new Error(`${resp.status} ${resp.statusText}`);
-				e.more = new_tag("pre");
-				e.more.add_text(txt);
-				throw e;
-			})
-		)
-		.then(info => {
-			if(info._type == "playlist") {
-				dump_playlist(info);
-			} else {
-				dump_video_info(info);
-			}
-			document.body.setAttribute("class", "info");
+			return fetch(req_url, req_info)
+				.then(resp => resp.ok
+					? resp.json()
+					: resp.text().then(txt => {
+						const e = new Error(`${resp.status} ${resp.statusText}`);
+						e.more = new_tag("pre");
+						e.more.add_text(txt);
+						throw e;
+					})
+				)
+				.then(info => {
+					if(info._type == "playlist") {
+						dump_playlist(info, add_intent);
+					} else {
+						dump_video_info(info, add_intent);
+					}
+					document.body.setAttribute("class", "info");
+				});
 		})
 		.catch(show_error);
 }
@@ -106,7 +106,20 @@ function format_filesize(size) {
 	return `${size.substr(0, n - 1)}.${size.substr(n - 1)} MiB`;
 }
 
-function dump_format_info(data, title, uploader) {
+function vlc_intent_uri(url) {
+	const m = url.match(/^([^:]*):\/\/([^#]*)/);
+	if(!m) {
+		return null;
+	}
+	return "intent://" + m[2]
+			+ "#Intent;"
+			+ "package=org.videolan.vlc;"
+			+ "scheme=" + m[1] + ";"
+			+ "type=video/*;"
+			+ "end";
+}
+
+function dump_format_info(data, add_intent, title, uploader) {
 	const root = new_tag("li");
 
 	if(data.format) {
@@ -127,6 +140,14 @@ function dump_format_info(data, title, uploader) {
 	embedded_url += "v=" + quote_plus(data.url);
 	root.add_tag("a", {href: embedded_url}).add_text("embedded");
 
+	if(add_intent) {
+		const intent = vlc_intent_uri(data.url);
+		if(intent) {
+			root.add_text("/");
+			root.add_tag("a", {href: intent}).add_text("VLC");
+		}
+	}
+
 	if(data.filesize) {
 		root.add_text(" " + format_filesize(data.filesize));
 	}
@@ -134,7 +155,7 @@ function dump_format_info(data, title, uploader) {
 	return root;
 }
 
-function dump_video_info(data, body) {
+function dump_video_info(data, add_intent, body) {
 	if(!body) {
 		document.title = data.title || `video ${data.id}`;
 		if(data.uploader) {
@@ -153,13 +174,20 @@ function dump_video_info(data, body) {
 		h2.appendChild(uploader);
 	}
 
+	if(add_intent) {
+		const intent = vlc_intent_uri(data.webpage_url);
+		if(intent) {
+			body.add_tag("a", {href: intent}).add_text("VLC");
+		}
+	}
+
 	const ul = body.add_tag("ul", {"class": "formats"});
 	(data.formats || [data])
-		.map(fmt => dump_format_info(fmt, data.title, data.uploader))
+		.map(fmt => dump_format_info(fmt, add_intent, data.title, data.uploader))
 		.forEach(e => ul.appendChild(e));
 }
 
-function dump_playlist(data) {
+function dump_playlist(data, add_intent) {
 	document.title = data.title || `playlist ${data.id}`;
 	if(data.uploader) {
 		document.title += " \u2014 " + data.uploader;
@@ -175,7 +203,7 @@ function dump_playlist(data) {
 	}
 
 	const videos = body.add_tag("ul", {"class": "videos"});
-	data.entries.forEach(e => dump_video_info(e, videos));
+	data.entries.forEach(e => dump_video_info(e, add_intent, videos));
 
 	body.add_tag("textarea", {"id": "m3u", "readonly": "yes"})
 		.add_text(dump_m3u(data));
