@@ -64,12 +64,7 @@ function fetch_youtubedl_info(url) {
 					})
 				)
 				.then(info => {
-					if(info._type == "playlist") {
-						dump_playlist(info, add_intent);
-					} else {
-						dump_video_info(info, add_intent);
-					}
-					document.body.setAttribute("class", "info");
+					dump_info(info, add_intent);
 				});
 		})
 		.catch(show_error);
@@ -207,6 +202,15 @@ function dump_playlist(data, add_intent) {
 
 	body.add_tag("textarea", {"id": "m3u", "readonly": "yes"})
 		.add_text(dump_m3u(data));
+}
+
+function dump_info(info, add_intent) {
+	if(info._type == "playlist") {
+		dump_playlist(info, add_intent);
+	} else {
+		dump_video_info(info, add_intent);
+	}
+	document.body.setAttribute("class", "info");
 }
 
 document.addEventListener("DOMContentLoaded", ev => {

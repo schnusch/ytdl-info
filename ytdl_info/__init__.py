@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import argparse
 import io
 import json
@@ -10,6 +9,7 @@ import traceback
 import urllib.parse
 
 from youtube_dl import YoutubeDL
+from .xhtml import generate_info
 
 class YtdlRequestHandler(http.server.BaseHTTPRequestHandler):
     logger = logging.getLogger('YtdlRequestHandler')
@@ -25,7 +25,7 @@ class YtdlRequestHandler(http.server.BaseHTTPRequestHandler):
             self.logger.info('extract info for %s', url)
             try:
                 # perhaps process=False?
-                info = self.ytdl.extract_info(url, download=False)
+                return self.ytdl.extract_info(url, download=False)
             except:
                 msg = 'youtube-dl failed to extract info'
                 self.logger.exception(msg)
@@ -36,20 +36,42 @@ class YtdlRequestHandler(http.server.BaseHTTPRequestHandler):
                 self.wfile.write(msg.encode('utf-8'))
                 self.wfile.write(b'\n')
                 self.wfile.write(traceback.format_exc().encode('utf-8'))
-            else:
-                info = json.dumps(info, separators=(',', ':'))
-                self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(info.encode('utf-8'))
-            self.wfile.write(b'\n')
+                self.wfile.write(b'\n')
+                raise
+
+    def _json_info(self, url):
+        try:
+            info = self._extract_info(url)
+        except:
+            return
+        info = json.dumps(info, separators=(',', ':'))
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(info.encode('utf-8'))
+        self.wfile.write(b'\n')
+
+    def _html_info(self, url):
+        try:
+            info = self._extract_info(url)
+        except:
+            return
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/xhtml+xml')
+        self.end_headers()
+        generate_info(self.wfile, info)
 
     def do_GET(self):
+        prefix = '/extract_info/'
+        if self.path.startswith(prefix):
+            url = self.path[len(prefix):]
+            return self._html_info(url)
+
         _, _, path, _, query, _ = urllib.parse.urlparse(self.path)
         if path == '/':
             query = urllib.parse.parse_qs(query)
             if 'u' in query:
-                return self._extract_info(query['u'][0])
+                return self._json_info(query['u'][0])
 
             self.send_response(400)
             self.send_header('Content-Type', 'text/plain; charset=utf-8')
@@ -100,6 +122,3 @@ def main():
     }
     logging.info('listening on %r...', address)
     httpd.serve_forever()
-
-if __name__ == '__main__':
-    sys.exit(main() or 0)
