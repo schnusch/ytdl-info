@@ -1,11 +1,7 @@
 { pkgs ? import <nixpkgs> {} }:
 pkgs.mkShell {
-  nativeBuildInputs = with pkgs.python3Packages; [
-    bottle
-    cheroot
-    jaraco_functools
-    youtube-dl
-
+  nativeBuildInputs = [
+    pkgs.python3Packages.youtube-dl
     pkgs.nodePackages.web-ext
   ];
 }
